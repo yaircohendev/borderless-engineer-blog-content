@@ -1,0 +1,62 @@
+---
+title: "What caused FB, Instagram, WhatsApp, Oculus, and more to be down for over 6 hours"
+date: "2021-10-08"
+coverImage: "pexels-thought-catalog-2228555-scaled.jpeg"
+---
+
+So what exactly caused FB, Instagram, WhatsApp, Oculus, and more to be down for over 6 hours this week? (October 4, 2021)
+
+I got curious and went on a small journey to find out, here's what I found.
+
+There are some technical terms we first need to explain to get out of the way. So the first part of the post will explain those prerequisite terms, and the second part will explain what actually happened.
+
+**IP Address**
+
+Essentially, the internet is a global network of computers that are connected. Just like in real life the people you're connected with have an address you can go to, computers have addresses too.
+
+This address is known as an IP address. So if computer a wants to communicate with computer b, it first needs to know computer b's address.
+
+This means that when you type '[facebook.com](https://facebook.com/?__cft__[0]=AZUb1ctiDBBgxIp1JUUhampM_vc8xfywOnFSL5fv3M3CQ-x4G5w2NEDsYHgNoEKFONdb7Y6F1DZpyvasHUoRYiA9AAWo3A_axuye6AKZ8ph3egdR9NKd01qPRIdZAYCFNhM&__tn__=-UK-R)' in the browser, it needs to know their IP address in order to actually get the copy of the website to the client.
+
+**Domain Name Servers (DNS)**
+
+The DNS is a distributed database that maps addresses to their IP address. So when you type in an address to the browser, the browser first goes to the DNS server, finds the real address of the website, and then sends an HTTP request to that address.
+
+**Autonomous Systems**
+
+An autonomous system (AS) is a collection of connected IP prefixes with a clearly defined routing policy that governs how the AS exchanges information with other AS.
+
+**BGP**
+
+In life, an address isn't enough to get to a friend's place, we also need directions. The same situation applies here, the IP address isn't enough and we actually need directions too. The BGP protocol acts as the direction.
+
+BGP stands for Border Gateway Protocol and is a standardized exterior gateway protocol designed to exchange routing between autonomous systems (AS) on the internet.
+
+**Backbone/core network**
+
+[A backbone or core network](https://en.wikipedia.org/wiki/Backbone_network) is a part of a computer network that interconnects networks, providing a path for the exchange of information between different LANs or sub-networks. A backbone can tie together diverse networks in the same building, in different buildings in a campus environment, or over wide areas. Normally, the backbone's capacity is greater than the networks connected to it.
+
+Now that we go the technical terms out of the way, let's get to the juicy details.
+
+**What happened in FB:**
+
+As [explained by Santosh Janardhan](https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/), the VP of engineering in FB, the outage was triggered by the system that manages its global backbone network capacity.
+
+When you open FB, first a request is made from your device to the nearest facility, which then communicates directly over their backbone network to a larger data center where all the information is stored and sent back directly to your device.
+
+During a routine maintenance job, a command that issued a change was issued with the intention to assess the availability of global backbone capacity, which took down all the connections in the backbone network, effectively disconnecting FB data centers globally.
+
+Facilities that are responding to DNS queries were down. Those facilities' role was to answer a translation query that maps an IP to its domain, which was then advertised to the rest of the internet via the BGP protocol. To ensure reliable operation, FB DNS servers disable BGP advertisements if they themselves can't speak to data centers since it's an indication of an unhealthy network connection.
+
+As the entire backbone was removed from the operation, the locations declared themselves unhealthy and withdraw those BGP advertisements. The end result was that the DNS servers became unreachable even though they were still operational, so the internet could not find FB servers.
+
+**How FB solved this issue:**
+
+FB could not access the data centers as their network was done, and a total loss of DNS broke many of their internal tools that were used to investigate and solve outages like this.
+
+FB sent engineers on-site to the data centers to have them debug the issue and restart the system. This took time, changes to routes, and hardware inside is designed to be difficult to modify. Once they confirmed what the issue was, they were able to bring back the backbone, and everything came up with it.
+
+**Resources:**
+
+1. [https://web.stanford.edu/.../week1/InternetWhitepaper.htm](https://web.stanford.edu/class/msande91si/www-spr04/readings/week1/InternetWhitepaper.htm?fbclid=IwAR3oUXdg9VH47AshN7MscVzM_lkenwtaMbI80MQnfJGy5vZFieR_q7Qm15k)
+2. [https://developer.mozilla.org/.../Getti.../How\_the\_Web\_works](https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/How_the_Web_works?fbclid=IwAR3AAyV8LSH6KHtAShWzEflLGqSECC0ZeAzUgBNSvBE13gjcIHVEc6fpkiE)

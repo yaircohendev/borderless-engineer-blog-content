@@ -1,0 +1,170 @@
+---
+title: "Why Your Code Needs Abstraction Layers"
+date: "2021-12-05"
+categories: 
+  - "software-architecture"
+coverImage: "whyyourcodeneedsal.png"
+---
+
+Abstraction is one of the most important aspects of writing well-designed software.
+
+Understanding the underlying concept will give you a system to follow and a clear mental model on how to create good abstractions.
+
+Good abstractions reduce complexity and allow developers to make changes to the code with more ease and fewer bugs. But creating abstractions isn’t easy. So how exactly do you do this, and what steps do you need to take?
+
+## **What Is an Abstraction?**
+
+Before talking about abstraction layers in code, let’s briefly talk about [abstractions](https://en.wikipedia.org/wiki/Abstraction) in general and what they are.
+
+Abstraction can be defined as the process of simplifying an entity by:
+
+1. Omitting unimportant details.
+2. Exposing an interface.
+
+All abstractions are similar in that regard.
+
+Automatic cars are an excellent real-world example of abstraction. In that case, the clutch is abstracted, and the driver can shift gears more easily. 
+
+Abstractions have trade-offs as well. For example, though the driver can shift gears more easily, the driver also has less control of the car now, so abstracting the clutch for a race car driver is probably a bad idea.
+
+In the book “[Philosophy of Software Design](https://www.amazon.com/Philosophy-Software-Design-John-Ousterhout/dp/1732102201),” author John Ousterhout talks about two ways an abstraction can go wrong:
+
+1. **Including unimportant details**: By including unimportant details, the abstraction becomes more complicated than necessary and contributes to the increase of cognitive load on developers.
+2. **Omitting important details**: Ousterhout calls these types of abstractions “false abstractions,” as developers looking at the abstraction will not have all the information they need.
+
+So, you can see that a good abstraction needs to walk a fine line.
+
+## **Abstraction in Your Code**
+
+Now we know what an abstraction is, but how does it apply to code?
+
+All code can be categorized into either policy or detail.
+
+- Policy: These are entities and business logic.
+- Detail: This is the implementation of the policy. The detail enforces the policy.
+
+Let’s say you have a `User` entity. The user has a certain interface, and also some business logic. This `User` entity also has groups, and you’ve been assigned to write code that will get all the user groups.
+
+Here, the policy is the user itself as it’s an entity, but also it’s the `getUserGroups` function, as it’s the business logic related to that entity.
+
+How it’s implemented, which database (DB) is used, which ORM (object-relational-mapping) is used, which libraries are used, how that code is written and all of the different implementations are the detail part of your code.
+
+> Creating abstraction layers helps improve your code drastically by providing three major benefits: centralization, simplicity and better testing.
+
+In your code, you want to expose the policy while hiding the detail. This decoupling between your policy and detail allows you to switch and easily refactor implementation.
+
+If your policy and detail are coupled, you’ll have a hard time refactoring, as they will be mixed and changes will propagate from one to another.
+
+In a well-designed system, a separation between policy and detail is key.
+
+So how does this apply to abstraction layers?
+
+## **Abstraction Layers**
+
+An abstraction layer exposes an interface and hides the implementation details behind it.
+
+The purpose of abstraction layers is to create abstractions. Methods and properties inside the layer should be the interface that’s exposed, while the implementation inside those methods is everything in the detail layer.
+
+There are three major benefits to creating abstraction layers: 
+
+1. **Centralization**: By creating your abstraction in one layer, everything related to it is centralized so any changes can be made in one place. Centralization is related to the “Don’t repeat yourself” ([DRY](https://en.wikipedia.org/wiki/Don't_repeat_yourself)) principle, which can be easily misunderstood. 
+
+DRY is not only about the duplication of code, but also of knowledge. Sometimes it’s fine for two different entities to have the same code duplicated because this achieves isolation and allows for the future evolution of those entities separately.
+
+2. **Simplicity**: By creating the abstraction layer, you expose a specific piece of functionality and hide implementation details. Now code can interact directly with your interface and avoid dealing with irrelevant implementation details. This improves the code readability and reduces the cognitive load on the developers reading the code. Why? 
+
+Because policy is less complex than its details, so interacting with it is more straightforward.
+
+3. **Testing**: Abstraction layers are great for testing, as you get the ability to replace details with another set of details, which helps isolate the areas that are being tested and properly create [test doubles](https://en.wikipedia.org/wiki/Test_double).
+
+When testing code, developers need to test specific functionality, while creating test doubles for certain functions to avoid things like calling a real DB. When policy and details are entangled, overuse of test doubles is common, making the coverage lower and the tests a lot less useful.
+
+When creating abstraction layers for things like DB implementations, developers can replace that layer, making sure only DB responses are replaced while the rest of the functionality is tested.
+
+## **Example of Creating an Abstraction Layer**
+
+Let’s say you’re writing the code for a group creation API:
+
+```javascript
+function createUserGroup(group, userId) {
+        logger.info('Creating group for user ${userId}')
+        db.startTransaction();
+        const isValidGroup = validateGroup(group);
+        if (!isValidGroup) throw new Error('Invalid group');
+        db.addDoc('groups', group)
+        dc.addDoc('quotas/groups', 1)
+        .
+        .
+        .
+    }
+```
+
+As you can see in the short example, this function logic is mixed with policy and detail. It does many different things, and it does not use any abstraction layers.
+
+Here’s code that uses abstraction layers:
+
+```javascript
+class GroupsService {
+    GROUPS_COLLECTION = 'groups';
+ 
+    createGroup() {
+        db.startTransaction();
+        
+        const isValid = this.validateGroup();
+        if (!isValid) throw new Error('Invalid group')
+        
+        db.addDoc(GROUPS_COLLECTION, group)
+        quotasService.setQuota('/groups', 1);
+        
+        db.finishTransaction();
+    }
+    
+    validateGroup()
+    deleteGroup();
+}
+ 
+class QuotasService {
+    setQuota(collection: string, value: any) {
+        dc.addDoc(`quotas/${collection}`, value)
+    }
+}
+ 
+function createUserGroup(group, userId) {
+    logger.info(`Creating group for user ${userId}`)
+    groupsService.createGroup();
+    
+    return {
+        status: 200,
+        message: 'Group created successfully'
+    }
+}
+```
+
+There are multiple benefits from the second implementation:
+
+1. It’s easier to understand, as implementation details are abstracted, and you are reading code that interacts with the policy.
+2. Everything is centralized in one service. Imagine the code related to the Groups spread across the app. Each change made will need to happen everywhere; it will be problematic, to say the least.
+3. Code is more encapsulated. Notice how the controller `createUserGroup` is not aware of quota now and only aware of group creation because the quota is irrelevant. 
+4. We can focus on testing implementation while replacing just the details layer with test doubles, making testing easier. For an integration test, we can replace the `QuotaService` and the `GroupService` and test the implementation of that specific controller implementation.
+
+## **Possible Applications**
+
+Abstraction layers can be implemented in many different ways, among the top use cases are:
+
+1. **Creating leaner components by separating policy and detail**: Your code will pass the test of time if changes and refactoring are easy. Separating policy and detail while keeping interactions between components only with the interface provides the infrastructure needed for future code evolution. 
+
+2. **Wrapping a third-party library**: Having an outdated third-party library in your code that prevents you from upgrading other dependencies is a nightmare. Or even worse, if that dependency has a security risk. 
+
+By wrapping your third-party libraries with your own interface in one central abstraction layer, changes will be easy because they will only need to be made in that one place where the interface is exposed. 
+
+3. **Creating a utility service**: Utility services are a crucial way to increase development speed and also reuse generic pieces of code. 
+
+If you’re working on a feature that deals a lot with different time and dates functionality for example, why not create a couple of utility functions to help you and put them in one place for further reuse?
+
+## **Summary**
+
+Creating abstraction layers helps improve your code drastically by providing three major benefits: centralization, simplicity and better testing.
+
+Keep in mind that abstraction layers, and abstractions in general, are not a goal but a means to an end. Abstractions can have cons. A common example is how certain abstractions hurt performance. So always understand the tradeoffs first. 
+
+[](https://www.linkedin.com/in/yair-cohen-dev/?originalSubdomain=il)

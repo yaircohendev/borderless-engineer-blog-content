@@ -1,0 +1,90 @@
+---
+title: "Web Assembly Deep Dive – How it Works, And Is It The Future?"
+date: "2021-10-23"
+categories: 
+  - "web-assembly"
+coverImage: "wasm.png"
+---
+
+You’ve most likely heard of Web Assembly. Maybe you’ve heard about how game-changing of a technology it is, and maybe you’ve heard about how it’s going to change the web.
+
+Is it true? The answer to this question is not as simple as a yes or no, but we can definitely tell a lot as it’s been around for a while now. Since November 2017, Web Assembly has been supported in all major browsers, and even mobile web browsers for iOS and Android.
+
+In this article, I’ll explain what Web Assembly is, how it works, what are the advantages, and what are the current uses today.
+
+So with that being said, let’s get started!
+
+## What is Web Assembly?
+
+Let’s take a look at how [MDN](https://developer.mozilla.org/en-US/docs/WebAssembly) explains it:
+
+_“WebAssembly is a new type of code that can be run in modern web browsers — it is a low-level assembly-like language with a compact binary format that runs with near-native performance and provides languages such as C/C++, C# and Rust with a compilation target so that they can run on the web. It is also designed to run alongside JavaScript, allowing both to work together.”_
+
+We can learn a few important things from their explanation:
+
+**First**, Web Assembly (or, WASM for short) is not a language you write, but a compilation result of other languages. Here’s a list of all the languages that support compilation to WASM: [https://github.com/appcypher/awesome-wasm-langs](https://github.com/appcypher/awesome-wasm-langs)
+
+You’ll probably be surprised to find out you can even use TypeScript syntax to write Assembly, using [AssemblyScript](https://github.com/appcypher/awesome-wasm-langs#assemblyscript).
+
+**Second**, WASM is faster than JS and runs with near-native performance in the browser. This is a big deal and is what makes WASM so attractive.
+
+**Third**, WASM is designed to run alongside JavaScript, and not to replace it. One of the misconceptions about WASM is that it is somehow a competitor to JS. The truth is, WASM has been designed to run alongside JavaScript from the get-go.
+
+WASM and JS can even communicate with each other. So WASM code has the ability to indirectly access JS features such as different features of the Web API like the DOM, Audio, Web Sockets, etc.
+
+## How Web Assembly Works
+
+So by now you probably get that WASM is fast, but why? How does it actually work?
+
+In order to understand that, first you’ll need to understand how the JS engine works behind the scenes. Since this is not the main topic of the article, I’ll only touch on it from a high-level. I explained it much more deeply in my article about [how the JS engine works](https://frontendmeta.com/how-js-works-behind-the-scenes-the-engine/), and I highly recommend to read it first if you’re not familiar with the subject at all.
+
+Also keep in mind that engine implementations are different, the steps I’m explaining here are about how V8 works, but other engines might do this differently.
+
+### How the JS Engine Works
+
+In order to compile JS code there are few things the engine must do:
+
+1. **The Parser** – the engine must pass that code through a parser first. The parser goes through the code line by line and checks it for valid syntax as well as for the code types. If everything is valid, the Parser creates a tree data-structure called an Abstract Syntax Tree (AST).
+2. **AST to Intermediate Representation (IR)** – Then, the engine interpreter takes the AST and turns it into Bytecode, which is an intermediate representation of the code (an IR is an abstraction of machine code).
+3. **Compiling the IR to Machine Code** – Only then the engine compiler takes the Bytecode and turns it into a code a machine can run on its processor.
+
+### How WASM Works
+
+The reason WASM is faster is that WASM code goes directly to the compiler, effectively skipping steps 1 and 2.
+
+But you might be wondering, why? Why is WASM able to skip steps 1 and 2 and JS not?
+
+The reason for that is because JS is a dynamically-typed language, which means that JS checks the type of variables at run-time by the Parser.
+
+In contrast, statically-typed languages require to declare the types in advance, therefore types are known and are checked at compile time.
+
+So the way WASM works is:
+
+1. You write code with its types, usually in a statically typed-language.
+2. Then you generate a pre-compiled WASM module.
+3. Then you can run this code straight by the engine compiler, skipping the parsing and the transformation to Intermediate Representation.
+
+## Where is Web Assembly Today?
+
+But did WASM pass the test of time?
+
+In 2019, researchers from Braunschweig in Germany looked at Alexa’s top 1 million websites and their use of Web Assembly. They wanted to see what WASM is being used for today.
+
+They analyzed 947,407 websites and 3,465,320 pages. They found that 1,639 websites are loading 1,950 modules of WASM.
+
+The two main uses of WASM were:
+
+1. **Crypto Mining** – 32% of the websites used WASM for Cryptocurrency mining (mostly with malicious purposes in hacked websites). The reason they used WASM is that the speed boost also means that computer hardware can be exploited more effectively for cryptojacking attacks.
+2. **Gaming** – 29.3% of the websites used WASM for gaming. One example is the popular game Doom 3.
+
+However, there are more uses for Web Assembly than just Gaming and Crypto Mining. In fact, Figma, a popular web designing tool, reported that they tripled their loading speed with WASM.
+
+Fastq.bio reported they were able to improve performance by 20 fold. Autocad also used WASM and reported they were able to get native-like speed in the browser.
+
+## Conclusion
+
+Web Assembly is definitely a revolutionary technology that allows running heavy software in the browser, something that was not possible before.
+
+With that said, if you’re not trying to run super heavy computation then you probably don’t need to use WASM.
+
+JS is still very fast and still dominates the browser, that doesn’t seem to change with the coming of WASM. Rather than replacing JS, WASM allows for better integrations, and software that uses WASM will most likely use JS too.[](https://coralogix.com/blog/whats-the-most-powerful-tool-in-your-security-arsenal/)

@@ -1,0 +1,188 @@
+---
+title: "How JS Works - Lexical Environment"
+date: "2021-11-01"
+categories: 
+  - "how-js-works"
+  - "javascript"
+coverImage: "how-js-works-lexical.png"
+---
+
+In the previous article, we talked about [execution context](https://frontendmeta.com/understanding-the-execution-context-in-javascript/), what it is, how it works, and how its created. We explained how execution context is created from an overview, and we didn't get into the steps that happen during the creation.
+
+Now we'll start diving into the steps that happen when execution context is created, specifically we'll learn about lexical environment.
+
+The more we learn about this, the closer we are to understanding other subjects in JS such as hoisting, and closure very easily.
+
+So let's begin!
+
+**Overview**
+
+Do you remember what I talked about in the previous article regarding what happens when execution context is created? Let's go over it again briefly.
+
+The creation is execution context happens in 2 phases:
+
+1. **Creation Phase** - in the creation phase a template is created of all the variables the functions that are in the code. Variable declerations are saved with an initial value of undefined in the case of var or uninitilized in the case of let and const. Function declarations are saved as well, and the function arguments values are also saved.
+2. **Execution Phase** - the engine goes through the code, assigns the different variables and executes the code.
+
+**Creation Phase in Depth**
+
+This was a high-level overview, in reality, things are a bit more complex. The creation phase consists of three things:
+
+1. **VariableEnvironment** - the VariableEnvironment is a type of lexical environment and its used to save the variables, functions and arguments.
+2. **LexicalEnvironment** - the LexicalEnvironment is a copy of the Variableenvironment.
+3. **thisBinding** - this is where the value of this is set, we will talk about it in the next article.
+
+```
+ExecutionContext = {
+  ThisBinding: <this value>,
+  VariableEnvironment: { ... },
+  LexicalEnvironment: { ... }
+}
+```
+
+In this article, we'll talk about the first 2 parts of the creation phase, VariableEnvironment, and LexicalEnvironment creation.
+
+Both of them are types of lexical environments, and the LexicalEnvironment is essentially a copy of the VariableEnvironment so for now we'll treat them as the same and we'll talk about their differences later.
+
+**Lexical Environment**
+
+So... what's a lexical environment?
+
+The [official definition](http://ecma-international.org/ecma-262/6.0/) says as follows:
+
+> A Lexical Environment is a specification type used to define the association of Identifiers to specific variables and functions based upon the lexical nesting structure of ECMAScript code. A Lexical Environment consists of an Environment Record and a possibly null reference to an outer Lexical Environment.
+
+Let's simplify it and focus on the important part of the definition:
+
+> A Lexical Environment is a specification type used to define the association of Identifiers to specific variables and functions
+
+A lexical environment is essentially a structure that defines the association between identifiers, to specific variables and functions.
+
+If you're wondering what the difference is between identifiers and variables, you can think of identifiers as the variables' names.
+
+The association between a name of a variable to its value is called binding. So if you hear the term identifier binding, remember it's about the association between the variable name to its value.
+
+So if we take the next piece of code:
+
+```
+let x = 10;
+```
+
+The identifier is x, and it has binding to the value 10.
+
+**Lexical Environment Structure**
+
+A lexical environment has 2 parts:
+
+1. Environment Record
+2. Reference to the our environment
+
+**Environment Record**
+
+The precise definition is that an environment record holds the identifier bindings which were created in the scope of the lexical environment.
+
+But to make things simple, we can think of an environment record as a special object that contains the declarations of the variables and functions which are inside the lexical environment.
+
+There are 2 types of Environment Records:
+
+1. **Declerative Environment Record** - its job is to host declerations of variables, functions and arguments that are inside the scope of functions. (before ES5, we had activation object, the declarative environment variable replaces the activation object. The primary motivation to do that was actually performance)
+2. **Object Environment Record** - its job is to store declerations of variables and functions that are in the global scope.
+
+Let's take the following code example:
+
+```javascript
+var x = 10;
+function foo(a) {
+  var y = 20;
+}
+foo('hello')
+```
+
+Here we have two environments, one is the global one and the other one is a function one ('foo'). So how would that be represented theoretically behind the scenes?
+
+```
+// environment of the global context
+globalEnvironment = {
+  environmentRecord: {
+    // type
+	type: "ObjectEnvironmentRecord",
+    // built-ins:
+    Object: function,
+    Array: function,
+    // etc ...
+
+    // our bindings:
+    x: 10
+    foo: <function ref>
+  },
+  outer: null // no parent environment
+};
+
+// environment of the "foo" function
+fooEnvironment = {
+  environmentRecord: {
+   // type
+	type: "DeclarativeEnvironmentRecord",
+   // our bindings:
+    y: 20,
+    arguments: {0: 'hello', length: 1},
+  },
+  outer: globalEnvironment
+};
+```
+
+Keep in mind that:
+
+1. Inside the environment record of the global environment we have all the prototype functions of Object, Array, and other built-in functions.
+2. The environment record of type declarative environment (which is created when calling a function) contains something called an arguments object. The arguments object is an object that contains the values that are passed into the function and their index. It also contains a property length which represents the number of arguments that were passed.
+
+**Reference to other environment**
+
+Each lexical environment holds a reference to its outer environment. In the example above we can see that the function foo has a ref to the global function.
+
+The global environment itself has no ref as it has no environment as its parent, it's the root environment.
+
+When JS looks for a variable, if it's not found in the current context it goes to the outer environment, and this process repeats itself till the value is found or till it gets to the global object which its reference to our environment equals to null since it has no environment above it.
+
+**Difference Between LexicalEnvironment to VariableEnvironment**
+
+The differences between them are not that important, but for the sake of completeness we will cover them as well. Feel free to skip this part if you feel it's too complex.
+
+The LexicalEnvironment and VariableEnvironment are the always the same except one case - when there's a dominant scope (outer scope) and also a temporary scope.
+
+There are two cases where a temporary scope is created:
+
+1. [with](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with) - the object that's the argument inside with will become the temporary scope
+2. [catch](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch) - the exception is available through a temporary scope
+
+In the inner scope new bindings need to be available, but all new bindings created also need to be added to the outer scope.
+
+So when a temporary scope is created the LexicalEnvironment refers to a new environment that contains the bindings of the inner scope while the VariableEnvironment stays the same and new bindings are added to the VariableEnvironment and are found even when looked up through the LexicalEnvironment.
+
+After leaving the temporary scope the LexicalEnvironment goes back to the way it was before and it that moment the LexicalEnvironment and VariableEnvironment are identical.
+
+**Summary**
+
+A new lexical environment is created when an execution context is created. There are two types of lexical environments:
+
+1. VariableEnvironment
+2. LexicalEnvironment
+
+These environments are identical and the difference is minor and only relevant when an inner temporary scope is created. In practice, we can treat them both as the lexical environment as most of the time they're identical (except with catch or with).
+
+A lexical environment is a structure which defines the association between identifiers of variables and functions, a kind of map between variable and function names and their values.
+
+A lexical environment contains two things:
+
+1. **Environment Record** - the environment record holds the variables and functions inside the lexical environment. The declarative environment record holds declarations of variables, functions and arguments that are inside function scopes. The object environment record holds the decelerations of variable and functions that are inside the global scope.
+2. **Reference to outer environment -** every lexical environment also holds a reference to its outer lexical environment. So if a value is not found in the current environment record, the engine will search it in the environment above, until it's found or reached the very top level
+
+![](images/Screen-Shot-2020-11-09-at-20.40.44.png)
+
+That's it for today, now you understand exactly what happens when a new execution context is created. Next up and to wrap up the article series we will talk about thisBinding.
+
+**Resources:**
+
+- [JavaScript basics: The Execution Context and the Lexical Environment](https://medium.com/dailyjs/javascript-basics-the-execution-context-and-the-lexical-environment-3505d4fe1be2)
+- [Dmitry Soshnikov’s post on the Theory of Lexical Environments](http://dmitrysoshnikov.com/ecmascript/es5-chapter-3-1-lexical-environments-common-theory/)
+- [ECMAScript 5 spec: LexicalEnvironment versus VariableEnvironment](https://2ality.com/2011/04/ecmascript-5-spec-lexicalenvironment.html)
