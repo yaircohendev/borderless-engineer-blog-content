@@ -1,0 +1,54 @@
+---
+title: "Don't heavily rely on primitives!"
+date: "2023-03-15"
+coverImage: "1678778314072.jpeg"
+---
+As your codebase grows, so does the risk of running into issues with extensibility.
+
+If you're heavily relying on primitive values, you may be setting yourself up for a maintenance nightmare!
+
+Take the following scenario as an example:
+
+1. You create a software that relies on a certain primitive. (e.g. "hours", which is a number)
+2. You keep writing more and more code relying on that primitive value, as it's core to the software functionality.
+3. After a while, new functionality needs to be supported (e.g. Supporting also "minutes")
+
+Because the software you wrote relies on a specific primitive, you have to go over all the places that uses it, and make sure it also takes into account the other one.
+
+You can do it either by:
+* Changing all the functions and callers of those functions to also pass in and handle a second value.
+* Creating a "time" object, which the functions will accept and work with instead.
+
+Which one to choose? 🤔
+
+Choosing the first option will mean that when new requirements comes in, you will have to go through the entire code again and make this change again, refactoring all functions and callers.
+
+You can also imagine how the code can get pretty convoluted after a while, with more and more functions arguments being added.
+
+What about the second option, creating a "time" object?
+
+Initially, it'll probably be more work. When relying on a primitive value, the software expects it, different operations that are done on it may need to change because now it's an object.
+
+The result though is way better:
+
+Objects can be extended.
+
+So if a new requirements comes in, let's say supporting "millisecond", because all the functions expects a "Time" object, you won't need to change the callers of functions, just the logic inside to support it.
+
+Essentially, you are changing the implementation details of those functions without touching the interface of the code, which is one the most important principals when it comes to code maintainability 🎯
+
+The pattern of using objects instead of primitive values is called the "Whole Value Pattern".
+
+It emphasizes the importance of treating objects as cohesive wholes, rather than a collection of individual values.
+
+Besides the advantage of extensibility, it has the advantage that the object passed around is properly carrying the meaning, and intent with it.
+
+Sometimes the code is so simple there's no need to use this pattern.
+
+The key to think about is the cost of change 💰
+
+If you can easily extend your code while relying on primitives, great!
+
+But if you're seeing that you're passing that primitive around to various places, chances are extending it is going to be a pain.
+
+So next time you rely on a primitive in your software, think long and hard if it can be extended when needed, and when applicable use the Whole Value Pattern instead.
